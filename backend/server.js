@@ -58,7 +58,8 @@ const connectDB = async () => {
     console.log('✓ Connected to MongoDB Atlas');
   } catch (error) {
     console.error('✗ MongoDB connection failed:', error.message);
-    process.exit(1); // Exit so the process supervisor can restart the server
+    console.warn('⚠ Server will continue running without database connection');
+    // Continue running instead of exiting - useful for development/debugging
   }
 };
 
