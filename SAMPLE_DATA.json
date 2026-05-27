@@ -1,0 +1,74 @@
+{
+  "sampleExpenses": [
+    {
+      "title": "Grocery Shopping",
+      "category": "Food",
+      "amount": 45.50,
+      "date": "2024-03-25",
+      "description": "Weekly groceries - vegetables and dairy"
+    },
+    {
+      "title": "Gas Fill-up",
+      "category": "Transportation",
+      "amount": 60.00,
+      "date": "2024-03-26",
+      "description": "Filled tank at Shell Gas Station"
+    },
+    {
+      "title": "Movie Tickets",
+      "category": "Entertainment",
+      "amount": 30.00,
+      "date": "2024-03-27",
+      "description": "2 tickets for latest movie"
+    },
+    {
+      "title": "Electric Bill",
+      "category": "Utilities",
+      "amount": 120.00,
+      "date": "2024-03-24",
+      "description": "Monthly electricity bill"
+    },
+    {
+      "title": "Doctor Visit",
+      "category": "Healthcare",
+      "amount": 75.00,
+      "date": "2024-03-23",
+      "description": "Regular check-up and consultation"
+    },
+    {
+      "title": "New Shoes",
+      "category": "Shopping",
+      "amount": 95.00,
+      "date": "2024-03-22",
+      "description": "Running shoes from Nike store"
+    },
+    {
+      "title": "Restaurant Dinner",
+      "category": "Food",
+      "amount": 55.00,
+      "date": "2024-03-21",
+      "description": "Dinner with friends at Italian restaurant"
+    },
+    {
+      "title": "Public Transport Pass",
+      "category": "Transportation",
+      "amount": 50.00,
+      "date": "2024-03-20",
+      "description": "Monthly bus and metro pass"
+    },
+    {
+      "title": "Concert Tickets",
+      "category": "Entertainment",
+      "amount": 100.00,
+      "date": "2024-03-19",
+      "description": "Live music concert - front row seat"
+    },
+    {
+      "title": "Internet Bills",
+      "category": "Utilities",
+      "amount": 80.00,
+      "date": "2024-03-18",
+      "description": "Monthly internet subscription"
+    }
+  ]
+}
