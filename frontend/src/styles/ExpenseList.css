@@ -1,0 +1,247 @@
+.expense-list-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.expense-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-section label {
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+}
+
+.category-filter {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background-color: white;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.category-filter:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.total-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.total-label {
+  font-size: 0.95rem;
+}
+
+.total-amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.expense-list > * + * {
+  margin-top: 0;
+}
+
+.expense-list-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.expense-list-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.expense-list-loading p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .expense-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-filter {
+    width: 100%;
+  }
+
+  .total-section {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+/* Monthly Trend */
+.monthly-trend-section {
+  margin-bottom: 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.monthly-trend-toggle {
+  width: 100%;
+  background: linear-gradient(135deg, #f5f7ff 0%, #eef0ff 100%);
+  border: none;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5a67d8;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.monthly-trend-toggle:hover {
+  background: linear-gradient(135deg, #e8ecff 0%, #dfe4ff 100%);
+}
+
+.monthly-trend-grid {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fafafa;
+}
+
+.trend-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 80px 90px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+
+.trend-month {
+  font-weight: 600;
+  color: #444;
+}
+
+.trend-bar-wrap {
+  background: #e9ecef;
+  border-radius: 4px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.trend-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+}
+
+.trend-total {
+  font-weight: 700;
+  color: #333;
+  text-align: right;
+}
+
+.trend-count {
+  color: #888;
+  font-size: 0.80rem;
+}
+
+.no-trend {
+  color: #999;
+  text-align: center;
+  padding: 10px;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .trend-row {
+    grid-template-columns: 110px 1fr 70px;
+  }
+  .trend-count {
+    display: none;
+  }
+
+  .expense-list-header {
+    margin-bottom: 20px;
+  }
+
+  .total-section {
+    font-size: 0.85rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .total-label {
+    font-size: 0.85rem;
+  }
+
+  .total-amount {
+    font-size: 1.1rem;
+  }
+}
