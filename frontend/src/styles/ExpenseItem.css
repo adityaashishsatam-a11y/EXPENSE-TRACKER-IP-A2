@@ -1,0 +1,152 @@
+.expense-item {
+  background: white;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: itemFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.expense-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.expense-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 15px;
+}
+
+.expense-title-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.expense-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.category-food { background-color: #fff3cd; color: #856404; }
+.category-transportation { background-color: #d1ecf1; color: #0c5460; }
+.category-entertainment { background-color: #e7d4f5; color: #663399; }
+.category-utilities { background-color: #d4edda; color: #155724; }
+.category-healthcare { background-color: #f8d7da; color: #721c24; }
+.category-shopping { background-color: #d6d8db; color: #383d41; }
+.category-other { background-color: #e2e3e5; color: #383d41; }
+
+.expense-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+  min-width: 120px;
+  text-align: right;
+}
+
+.expense-body {
+  margin-bottom: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.expense-date {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.expense-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.expense-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-edit {
+  background-color: #667eea;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #5568d3;
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .expense-item {
+    padding: 15px;
+  }
+
+  .expense-header {
+    flex-direction: column;
+  }
+
+  .expense-amount {
+    text-align: left;
+    min-width: auto;
+  }
+
+  .expense-actions {
+    justify-content: space-between;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    flex: 1;
+  }
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
