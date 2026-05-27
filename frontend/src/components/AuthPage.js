@@ -77,7 +77,6 @@ const AuthPage = ({ onAuthSuccess }) => {
   const switchMode = (newMode) => {
     setMode(newMode);
     setError('');
-    setFormData({ name: '', email: '', password: '' });
   };
 
   return (
