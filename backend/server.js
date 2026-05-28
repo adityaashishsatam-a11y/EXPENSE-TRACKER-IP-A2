@@ -28,6 +28,7 @@ require('dotenv').config();
 const authRoutes    = require('./routes/authRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const adminRoutes   = require('./routes/adminRoutes');
+const budgetRoutes  = require('./routes/budgetRoutes');
 
 const app = express();
 
@@ -70,6 +71,7 @@ connectDB();
 app.use('/api/auth',     authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/admin',    adminRoutes);
+app.use('/api/budgets',  budgetRoutes);
 
 // Health check — useful for deployment platforms and load balancers
 app.get('/api/health', (req, res) => {
@@ -96,5 +98,6 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Server running on port ${PORT}`);
   console.log(`   Auth:     http://localhost:${PORT}/api/auth`);
   console.log(`   Expenses: http://localhost:${PORT}/api/expenses`);
-  console.log(`   Admin:    http://localhost:${PORT}/api/admin\n`);
+  console.log(`   Admin:    http://localhost:${PORT}/api/admin`);
+  console.log(`   Budgets:  http://localhost:${PORT}/api/budgets\n`);
 });
