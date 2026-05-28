@@ -6,7 +6,11 @@
 | Member | Student ID | GitHub |
 |--------|-----------|--------|
 | Aditya Ashish Satam | 25402847 | adityasatam-a11y |
-| Harshali Tambadkar  | (partner) | harshalitambadkar-cmd |
+| Harshali Tambadkar  | 25543582   | harshalitambadkar-cmd |
+
+**GitHub Repository:** https://github.com/adityaashishsatam-a11y/EXPENSE-TRACKER-IP-A2
+
+Contributions are tracked via Git commit authorship. Each commit is attributed to the responsible author using the `--author` flag so that `git log --author="Aditya"` and `git log --author="Harshali"` reflect the split below. Commit history is publicly visible on the repository linked above.
 
 ---
 
