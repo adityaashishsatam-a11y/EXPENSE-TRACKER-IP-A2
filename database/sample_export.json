@@ -1,0 +1,68 @@
+{
+  "_comment": "Sample MongoDB export for Expense Tracker — Assignment 2. Import with: mongoimport --db expensetracker --collection expenses --file sample_export.json --jsonArray",
+
+  "users": [
+    {
+      "name": "Demo Admin",
+      "email": "admin@demo.com",
+      "password": "$2a$10$exampleHashedPasswordForAdminUser1234567890abcdef",
+      "role": "admin",
+      "isActive": true,
+      "createdAt": "2025-01-10T00:00:00.000Z"
+    },
+    {
+      "name": "Alice Johnson",
+      "email": "alice@demo.com",
+      "password": "$2a$10$exampleHashedPasswordForAliceUser1234567890abcdef",
+      "role": "user",
+      "isActive": true,
+      "createdAt": "2025-02-14T00:00:00.000Z"
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob@demo.com",
+      "password": "$2a$10$exampleHashedPasswordForBobUser12345678901234abcdef",
+      "role": "user",
+      "isActive": true,
+      "createdAt": "2025-03-01T00:00:00.000Z"
+    }
+  ],
+
+  "expenses": [
+    { "title": "Weekly Groceries",       "category": "Food",           "amount": 87.50,  "date": "2025-05-01", "description": "Woolworths — fruit, veg, dairy" },
+    { "title": "Bus Monthly Pass",       "category": "Transportation", "amount": 50.00,  "date": "2025-05-02", "description": "Opal card top-up" },
+    { "title": "Netflix Subscription",   "category": "Entertainment",  "amount": 22.99,  "date": "2025-05-03", "description": "Monthly streaming" },
+    { "title": "Electricity Bill",       "category": "Utilities",      "amount": 134.20, "date": "2025-05-05", "description": "April billing cycle" },
+    { "title": "GP Visit",               "category": "Healthcare",     "amount": 39.00,  "date": "2025-05-07", "description": "Bulk-billed gap payment" },
+    { "title": "Running Shoes",          "category": "Shopping",       "amount": 119.95, "date": "2025-05-08", "description": "Nike Air Zoom" },
+    { "title": "Coffee & Lunch",         "category": "Food",           "amount": 24.50,  "date": "2025-05-10", "description": "CBD café" },
+    { "title": "Uber Ride",              "category": "Transportation", "amount": 18.40,  "date": "2025-05-12", "description": "Late-night trip home" },
+    { "title": "Cinema Tickets",         "category": "Entertainment",  "amount": 36.00,  "date": "2025-05-14", "description": "2x adult tickets" },
+    { "title": "Internet Bill",          "category": "Utilities",      "amount": 79.00,  "date": "2025-05-15", "description": "Monthly NBN plan" },
+    { "title": "Pharmacy",               "category": "Healthcare",     "amount": 27.95,  "date": "2025-05-17", "description": "Vitamins and cold medication" },
+    { "title": "Dinner Out",             "category": "Food",           "amount": 65.00,  "date": "2025-05-18", "description": "Italian restaurant with friends" },
+    { "title": "Train Tickets",          "category": "Transportation", "amount": 12.80,  "date": "2025-05-20", "description": "Day trip to Blue Mountains" },
+    { "title": "Spotify Premium",        "category": "Entertainment",  "amount": 11.99,  "date": "2025-05-21", "description": "Monthly music streaming" },
+    { "title": "Water Bill",             "category": "Utilities",      "amount": 56.40,  "date": "2025-05-22", "description": "Quarterly water rates" },
+    { "title": "Book — Clean Code",      "category": "Shopping",       "amount": 44.95,  "date": "2025-05-23", "description": "Robert C. Martin" },
+    { "title": "Supermarket Run",        "category": "Food",           "amount": 62.30,  "date": "2025-05-24", "description": "Mid-week top-up" },
+    { "title": "Parking",                "category": "Transportation", "amount": 14.00,  "date": "2025-05-25", "description": "CBD parking — 2 hours" },
+    { "title": "Online Course",          "category": "Entertainment",  "amount": 29.99,  "date": "2025-05-26", "description": "Udemy React course" },
+    { "title": "Gas Bill",               "category": "Utilities",      "amount": 88.70,  "date": "2025-05-27", "description": "Winter heating spike" }
+  ],
+
+  "budgets": [
+    { "category": "Food",           "monthlyLimit": 300.00, "month": 5, "year": 2025 },
+    { "category": "Transportation", "monthlyLimit": 100.00, "month": 5, "year": 2025 },
+    { "category": "Entertainment",  "monthlyLimit": 80.00,  "month": 5, "year": 2025 },
+    { "category": "Utilities",      "monthlyLimit": 400.00, "month": 5, "year": 2025 },
+    { "category": "Healthcare",     "monthlyLimit": 100.00, "month": 5, "year": 2025 },
+    { "category": "Shopping",       "monthlyLimit": 150.00, "month": 5, "year": 2025 }
+  ],
+
+  "notes": {
+    "admin_setup": "Register via the UI, then run: node backend/promoteAdmin.js (after editing the email in that file) to grant admin access.",
+    "passwords": "Passwords above are placeholder hashes. Use the /api/auth/register endpoint to create real accounts — bcrypt hashing is automatic.",
+    "seed_script": "Run `node backend/seed.js` to populate the database with the sample users and expenses above (real bcrypt hashes will be generated)."
+  }
+}
