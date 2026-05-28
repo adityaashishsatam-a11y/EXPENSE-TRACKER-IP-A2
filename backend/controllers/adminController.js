@@ -27,12 +27,35 @@ const { handleError } = require('../utils/errorUtils');
 // GET /api/admin/stats
 exports.getStats = async (req, res) => {
   try {
+    const now        = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+
     const totalUsers    = await User.countDocuments({ role: 'user' });
     const totalExpenses = await Expense.countDocuments();
 
-    // Single aggregation pipeline sums all amounts in one DB round-trip
-    const totalSpentAgg = await Expense.aggregate([
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+    // Aggregate overall total and this month's total in parallel for efficiency
+    const [totalSpentAgg, thisMonthAgg, lastMonthAgg, categoryBreakdown] = await Promise.all([
+      // All-time total spending
+      Expense.aggregate([
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      // Spending in the current calendar month
+      Expense.aggregate([
+        { $match: { date: { $gte: monthStart } } },
+        { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]),
+      // Spending in the previous calendar month (for comparison)
+      Expense.aggregate([
+        { $match: { date: { $gte: lastMonth, $lt: lastMonthEnd } } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      // Break total spending down by category for the admin chart
+      Expense.aggregate([
+        { $group: { _id: '$category', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+        { $sort: { total: -1 } }
+      ])
     ]);
 
     const recentUsers = await User.find()
@@ -43,7 +66,15 @@ exports.getStats = async (req, res) => {
     res.status(200).json({
       totalUsers,
       totalExpenses,
-      totalSpent: totalSpentAgg[0]?.total || 0,
+      totalSpent:      totalSpentAgg[0]?.total  || 0,
+      spentThisMonth:  thisMonthAgg[0]?.total   || 0,
+      expensesThisMonth: thisMonthAgg[0]?.count || 0,
+      spentLastMonth:  lastMonthAgg[0]?.total   || 0,
+      categoryBreakdown: categoryBreakdown.map(c => ({
+        category: c._id,
+        total:    c.total,
+        count:    c.count
+      })),
       recentUsers
     });
   } catch (error) {
