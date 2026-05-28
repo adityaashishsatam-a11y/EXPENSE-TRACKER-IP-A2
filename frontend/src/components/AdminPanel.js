@@ -1,30 +1,49 @@
 /**
  * AdminPanel Component
+ * Author: Aditya Ashish Satam (25402847)
  *
  * Full administrative interface with three tabs:
- *   1. Dashboard  — Summary stats (total users, expenses, spending)
- *   2. Users      — Table of all users with inline actions; drill-down to view/delete their expenses
+ *   1. Dashboard  — Summary stats, month-over-month comparison, category breakdown chart
+ *   2. Users      — Table of all users with inline actions; drill-down to view expenses
  *   3. Activity   — Chronological log of all login, register, and expense events
  *
  * Design decisions:
- *  - useCallback wraps each data-loading function to prevent them from being
- *    recreated on every render, keeping useEffect dependencies stable
- *  - Tab switching triggers the appropriate data load via useEffect watching [tab]
- *  - Success messages auto-dismiss after 3 seconds using setTimeout
- *  - window.confirm() is used for destructive actions (delete) as a simple,
- *    accessible confirmation mechanism without adding a modal library
- *  - Cascade delete (user + their expenses + their activities) happens server-side;
- *    this component just removes the user row from local state on success
+ *  - useCallback wraps each data-loading function so useEffect dependencies are
+ *    stable — avoids infinite re-render loops when loadX is in a dep array.
+ *  - Tab switching triggers the appropriate data load via useEffect watching [tab].
+ *  - Success/error feedback is delivered via the injected showToast prop instead
+ *    of local state banners, keeping the component's state simpler.
+ *  - Custom Modal replaces window.confirm() for destructive actions (delete user,
+ *    delete expense) — more accessible, consistent styling, non-blocking.
+ *  - Cascade delete (user + their expenses + activities) happens server-side;
+ *    this component just removes the row from local state on success.
+ *  - Category breakdown chart uses CSS-only horizontal bars (no chart library
+ *    needed) — proportional widths relative to the highest-spending category.
+ *
+ * Props:
+ *   currentUser — the logged-in admin's user object
+ *   showToast   — toast notification function injected from App via ToastContext
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Modal from './Modal';
 import {
   getStats, getAllUsers, getUserExpenses,
   updateUser, deleteUser, adminDeleteExpense, getActivities
 } from '../services/adminService';
 import '../styles/AdminPanel.css';
 
-const AdminPanel = ({ currentUser }) => {
+const CATEGORY_COLORS = {
+  Food:           '#f6ad55',
+  Transportation: '#63b3ed',
+  Entertainment:  '#fc8181',
+  Utilities:      '#68d391',
+  Healthcare:     '#b794f4',
+  Shopping:       '#f687b3',
+  Other:          '#a0aec0'
+};
+
+const AdminPanel = ({ currentUser, showToast }) => {
   const [tab, setTab]               = useState('dashboard');
   const [stats, setStats]           = useState(null);
   const [users, setUsers]           = useState([]);
@@ -32,56 +51,52 @@ const AdminPanel = ({ currentUser }) => {
   const [selectedUser, setSelectedUser]     = useState(null);
   const [userExpenses, setUserExpenses]     = useState([]);
   const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
 
-  /** Show a success toast that auto-dismisses after 3 seconds */
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
+  // Modal state: { open, title, message, onConfirm }
+  const [modal, setModal] = useState({ open: false });
+
+  const openModal = (title, message, onConfirm, confirmText = 'Confirm') => {
+    setModal({ open: true, title, message, onConfirm, confirmText });
   };
+  const closeModal = () => setModal({ open: false });
 
-  // ── Data loaders (useCallback for stable useEffect dependencies) ──────────
+  // ── Data loaders ──────────────────────────────────────────────────────────
 
   const loadStats = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
       setStats(await getStats());
     } catch {
-      setError('Failed to load dashboard stats. Please try again.');
+      showToast('Failed to load dashboard stats.', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
       setUsers(await getAllUsers());
     } catch {
-      setError('Failed to load users. Please try again.');
+      showToast('Failed to load users.', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   const loadActivities = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
       setActivities(await getActivities());
     } catch {
-      setError('Failed to load activity log. Please try again.');
+      showToast('Failed to load activity log.', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
-  // Load data when tab changes
   useEffect(() => {
-    if (tab === 'dashboard') loadStats();
+    if (tab === 'dashboard')   loadStats();
     else if (tab === 'users')  loadUsers();
     else if (tab === 'activities') loadActivities();
   }, [tab, loadStats, loadUsers, loadActivities]);
@@ -91,12 +106,11 @@ const AdminPanel = ({ currentUser }) => {
   const handleViewExpenses = async (user) => {
     try {
       setLoading(true);
-      setError('');
       const data = await getUserExpenses(user._id);
       setUserExpenses(data.expenses);
       setSelectedUser(user);
     } catch {
-      setError('Failed to load expenses for this user.');
+      showToast('Failed to load expenses for this user.', 'error');
     } finally {
       setLoading(false);
     }
@@ -104,51 +118,79 @@ const AdminPanel = ({ currentUser }) => {
 
   const handleToggleRole = async (user) => {
     const newRole = user.role === 'admin' ? 'user' : 'admin';
-    try {
-      const updated = await updateUser(user._id, { role: newRole });
-      // Optimistically update the local users list without a full re-fetch
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, role: updated.role } : u));
-      showSuccess(`${user.name} is now ${newRole}.`);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update role.');
-    }
+    openModal(
+      `${newRole === 'admin' ? 'Promote' : 'Demote'} User`,
+      `${newRole === 'admin' ? 'Grant admin access to' : 'Remove admin access from'} "${user.name}"?`,
+      async () => {
+        closeModal();
+        try {
+          const updated = await updateUser(user._id, { role: newRole });
+          setUsers(prev => prev.map(u => u._id === user._id ? { ...u, role: updated.role } : u));
+          showToast(`${user.name} is now ${newRole}.`, 'success');
+        } catch (err) {
+          showToast(err.response?.data?.error || 'Failed to update role.', 'error');
+        }
+      },
+      newRole === 'admin' ? 'Promote' : 'Demote'
+    );
   };
 
   const handleToggleActive = async (user) => {
-    try {
-      const updated = await updateUser(user._id, { isActive: !user.isActive });
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: updated.isActive } : u));
-      showSuccess(`${user.name} has been ${updated.isActive ? 'activated' : 'deactivated'}.`);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update account status.');
-    }
+    const action = user.isActive ? 'Deactivate' : 'Activate';
+    openModal(
+      `${action} Account`,
+      `${action} "${user.name}"'s account?`,
+      async () => {
+        closeModal();
+        try {
+          const updated = await updateUser(user._id, { isActive: !user.isActive });
+          setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: updated.isActive } : u));
+          showToast(`${user.name} has been ${updated.isActive ? 'activated' : 'deactivated'}.`, 'success');
+        } catch (err) {
+          showToast(err.response?.data?.error || 'Failed to update account status.', 'error');
+        }
+      },
+      action
+    );
   };
 
-  const handleDeleteUser = async (user) => {
-    if (!window.confirm(`Delete "${user.name}" and ALL their expenses? This cannot be undone.`)) return;
-    try {
-      await deleteUser(user._id);
-      setUsers(prev => prev.filter(u => u._id !== user._id));
-      // Clear drill-down if the deleted user was being viewed
-      if (selectedUser?._id === user._id) setSelectedUser(null);
-      showSuccess(`${user.name} has been deleted.`);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete user.');
-    }
+  const handleDeleteUser = (user) => {
+    openModal(
+      'Delete User',
+      `Permanently delete "${user.name}" and ALL their expenses?\nThis action cannot be undone.`,
+      async () => {
+        closeModal();
+        try {
+          await deleteUser(user._id);
+          setUsers(prev => prev.filter(u => u._id !== user._id));
+          if (selectedUser?._id === user._id) setSelectedUser(null);
+          showToast(`${user.name} has been deleted.`, 'info');
+        } catch (err) {
+          showToast(err.response?.data?.error || 'Failed to delete user.', 'error');
+        }
+      },
+      'Delete'
+    );
   };
 
-  const handleDeleteExpense = async (expenseId) => {
-    if (!window.confirm('Delete this expense? This cannot be undone.')) return;
-    try {
-      await adminDeleteExpense(expenseId);
-      setUserExpenses(prev => prev.filter(e => e._id !== expenseId));
-      showSuccess('Expense deleted.');
-    } catch {
-      setError('Failed to delete expense.');
-    }
+  const handleDeleteExpense = (expenseId) => {
+    openModal(
+      'Delete Expense',
+      'Permanently delete this expense? This cannot be undone.',
+      async () => {
+        closeModal();
+        try {
+          await adminDeleteExpense(expenseId);
+          setUserExpenses(prev => prev.filter(e => e._id !== expenseId));
+          showToast('Expense deleted.', 'info');
+        } catch {
+          showToast('Failed to delete expense.', 'error');
+        }
+      },
+      'Delete'
+    );
   };
 
-  /** Maps action enum values to human-readable emoji labels */
   const formatAction = (action) => {
     const labels = {
       login:          '🔑 Login',
@@ -164,7 +206,6 @@ const AdminPanel = ({ currentUser }) => {
   const switchTab = (newTab) => {
     setTab(newTab);
     setSelectedUser(null);
-    setError('');
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -192,14 +233,12 @@ const AdminPanel = ({ currentUser }) => {
         </div>
       </div>
 
-      {/* Feedback banners */}
-      {error      && <div className="admin-error"   role="alert" onClick={() => setError('')}>{error} <span>×</span></div>}
-      {successMsg && <div className="admin-success" role="status">{successMsg}</div>}
-      {loading    && <div className="admin-loading" aria-live="polite">Loading…</div>}
+      {loading && <div className="admin-loading" aria-live="polite">Loading…</div>}
 
       {/* ── DASHBOARD TAB ── */}
       {tab === 'dashboard' && stats && !loading && (
         <div className="dashboard-content">
+          {/* Top stat cards */}
           <div className="stats-row">
             <div className="stat-card">
               <div className="stat-number">{stats.totalUsers}</div>
@@ -211,10 +250,52 @@ const AdminPanel = ({ currentUser }) => {
             </div>
             <div className="stat-card">
               <div className="stat-number">${stats.totalSpent.toFixed(2)}</div>
-              <div className="stat-label">Total Spent (All Users)</div>
+              <div className="stat-label">All-Time Spent</div>
+            </div>
+            <div className="stat-card stat-card-accent">
+              <div className="stat-number">${stats.spentThisMonth.toFixed(2)}</div>
+              <div className="stat-label">
+                This Month
+                {stats.spentLastMonth > 0 && (
+                  <span className={`stat-change ${stats.spentThisMonth > stats.spentLastMonth ? 'change-up' : 'change-down'}`}>
+                    {stats.spentThisMonth > stats.spentLastMonth ? '▲' : '▼'}
+                    {Math.abs(((stats.spentThisMonth - stats.spentLastMonth) / stats.spentLastMonth) * 100).toFixed(0)}%
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* Category breakdown chart */}
+          {stats.categoryBreakdown?.length > 0 && (
+            <div className="category-chart-card">
+              <h3>Spending by Category (All Time)</h3>
+              <div className="category-chart">
+                {stats.categoryBreakdown.map((c, i) => {
+                  const maxTotal = stats.categoryBreakdown[0].total;
+                  const barWidth = (c.total / maxTotal) * 100;
+                  return (
+                    <div key={c.category} className="chart-row">
+                      <span className="chart-label">{c.category}</span>
+                      <div className="chart-bar-wrap">
+                        <div
+                          className="chart-bar"
+                          style={{
+                            width: `${barWidth}%`,
+                            background: CATEGORY_COLORS[c.category] || '#a0aec0'
+                          }}
+                        />
+                      </div>
+                      <span className="chart-amount">${c.total.toFixed(2)}</span>
+                      <span className="chart-count muted">({c.count})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent registrations */}
           <div className="recent-users-card">
             <h3>Recent Registrations</h3>
             {stats.recentUsers.length === 0 ? (
@@ -372,6 +453,18 @@ const AdminPanel = ({ currentUser }) => {
           )}
         </div>
       )}
+
+      {/* Shared confirmation modal for all destructive actions */}
+      <Modal
+        isOpen={modal.open}
+        title={modal.title}
+        message={modal.message}
+        confirmText={modal.confirmText || 'Confirm'}
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={modal.onConfirm}
+        onCancel={closeModal}
+      />
     </div>
   );
 };

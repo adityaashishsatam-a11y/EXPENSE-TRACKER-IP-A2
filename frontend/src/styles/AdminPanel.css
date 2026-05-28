@@ -97,30 +97,108 @@
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
   margin-bottom: 24px;
 }
 
 .stat-card {
   background: linear-gradient(135deg, #667eea, #764ba2);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   text-align: center;
   color: #fff;
 }
 
+.stat-card-accent {
+  background: linear-gradient(135deg, #38a169, #276749);
+}
+
 .stat-number {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 6px;
   word-break: break-all;
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  opacity: 0.85;
+  font-size: 0.82rem;
+  opacity: 0.9;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stat-change {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+/* ─── Category Chart ─────────────────────────────────────────────────────── */
+
+.category-chart-card {
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.category-chart-card h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.category-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 76px 52px;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-label {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.chart-bar-wrap {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chart-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.45s ease;
+  min-width: 4px;
+}
+
+.chart-amount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: right;
+}
+
+.chart-count {
+  font-size: 0.78rem;
+  text-align: right;
 }
 
 .recent-users-card {
@@ -284,10 +362,13 @@
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 
+@media (max-width: 1100px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-row { grid-template-columns: 110px 1fr 68px 44px; }
+}
+
 @media (max-width: 900px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
@@ -309,7 +390,16 @@
   }
 
   .stats-row {
-    grid-template-columns: 1fr; /* Stack cards vertically on mobile */
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .category-chart-card {
+    padding: 14px 16px;
+  }
+
+  .chart-row {
+    grid-template-columns: 90px 1fr 60px 36px;
+    gap: 6px;
   }
 
   .stat-card {

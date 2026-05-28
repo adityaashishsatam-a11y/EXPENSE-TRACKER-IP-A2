@@ -1,41 +1,65 @@
 /**
  * App.js — Root Component
+ * Author: Aditya Ashish Satam (25402847)
  *
- * Manages top-level application state and acts as the router between views:
+ * Manages top-level application state and acts as the view router:
  *   - Unauthenticated: renders <AuthPage /> (login/register)
- *   - Authenticated user: renders expense tracker view
- *   - Authenticated admin: additionally shows the Admin Panel tab
+ *   - Authenticated user: shows three tabs — Expenses, Budget, and (admin) Admin
+ *   - Admin: additionally has access to the full admin panel
  *
  * State decisions:
- *   - useState for all local UI state (simple, no global store needed at this scale)
- *   - useCallback wraps fetchExpenses and handleSearch to prevent unnecessary
- *     re-renders of child components that receive them as props
- *   - searchQuery is lifted here (not in ExpenseList) so the effect that triggers
- *     API calls can watch it as a dependency
+ *   - useState for all local UI state; no global store needed at this scale.
+ *   - useCallback wraps fetchExpenses, fetchBudgets, and handleSearch so their
+ *     references are stable across renders — prevents child components that
+ *     receive them as props from re-rendering unnecessarily.
+ *   - searchQuery is lifted here so the useEffect watching it can trigger
+ *     server-side re-fetches.
  *
  * Auth persistence:
- *   - JWT and user object are stored in localStorage by authService
- *   - On mount, getUser() restores the session so users stay logged in on refresh
+ *   - JWT and user object are stored in localStorage by authService.
+ *   - On mount, getUser() restores the session so users stay logged in on refresh.
+ *
+ * CSV Export:
+ *   - Built client-side from the current expense array; no extra API call.
+ *   - Constructs a Blob and triggers a download via a temporary <a> element.
+ *
+ * ToastProvider wraps the whole tree so any component can call useToast().
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import AuthPage from './components/AuthPage';
-import ExpenseForm from './components/ExpenseForm';
-import ExpenseList from './components/ExpenseList';
-import AdminPanel from './components/AdminPanel';
+import { ToastProvider, useToast } from './components/Toast';
+import AuthPage        from './components/AuthPage';
+import ExpenseForm     from './components/ExpenseForm';
+import ExpenseList     from './components/ExpenseList';
+import AdminPanel      from './components/AdminPanel';
+import BudgetManager   from './components/BudgetManager';
+import SpendingSummary from './components/SpendingSummary';
 import { getUser, logout } from './services/authService';
-import { createExpense, getExpenses, updateExpense, deleteExpense } from './services/expenseService';
+import {
+  createExpense, getExpenses, updateExpense, deleteExpense
+} from './services/expenseService';
+import { getBudgets } from './services/budgetService';
 import './styles/App.css';
 
-const App = () => {
-  const [user, setUser]                   = useState(null);
-  const [view, setView]                   = useState('expenses'); // 'expenses' | 'admin'
-  const [expenses, setExpenses]           = useState([]);
+// ── Inner app (needs access to useToast, so nested inside ToastProvider) ──────
+
+const AppInner = () => {
+  const { showToast } = useToast();
+
+  const [user, setUser]                     = useState(null);
+  const [view, setView]                     = useState('expenses'); // 'expenses' | 'budget' | 'admin'
+  const [expenses, setExpenses]             = useState([]);
+  const [budgets, setBudgets]               = useState([]);
   const [editingExpense, setEditingExpense] = useState(null);
-  const [showForm, setShowForm]           = useState(false);
-  const [loading, setLoading]             = useState(false);
-  const [error, setError]                 = useState('');
-  const [searchQuery, setSearchQuery]     = useState('');
+  const [showForm, setShowForm]             = useState(false);
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState('');
+  const [searchQuery, setSearchQuery]       = useState('');
+
+  // Derive current month/year for budget queries
+  const now          = new Date();
+  const currentMonth = now.getMonth() + 1;   // 1-indexed
+  const currentYear  = now.getFullYear();
 
   // Restore session from localStorage on initial mount
   useEffect(() => {
@@ -43,9 +67,11 @@ const App = () => {
     if (savedUser) setUser(savedUser);
   }, []);
 
+  // ── Data fetching ───────────────────────────────────────────────────────────
+
   /**
-   * Fetches expenses from the API, optionally filtered by a search string.
-   * Wrapped in useCallback so it's a stable reference for useEffect dependencies.
+   * Fetches expenses, optionally filtered by the search query.
+   * Wrapped in useCallback for a stable reference in useEffect dependencies.
    */
   const fetchExpenses = useCallback(async (search = '') => {
     try {
@@ -61,22 +87,48 @@ const App = () => {
     }
   }, []);
 
-  // Re-fetch whenever the user logs in, switches to expense view, or changes search
+  /**
+   * Fetches the current month's budgets from the API.
+   * Called on mount, after budget changes, and after any expense CRUD
+   * (because actualSpent values embedded in budget documents need refreshing).
+   */
+  const fetchBudgets = useCallback(async () => {
+    try {
+      const data = await getBudgets(currentMonth, currentYear);
+      setBudgets(data);
+    } catch {
+      // Budgets are supplementary — a fetch failure shouldn't block the app
+      setBudgets([]);
+    }
+  }, [currentMonth, currentYear]);
+
+  // Re-fetch whenever the user logs in, switches to expense view, or searches
   useEffect(() => {
     if (user && view === 'expenses') {
       fetchExpenses(searchQuery);
+      fetchBudgets();
     }
-  }, [user, view, fetchExpenses, searchQuery]);
+  }, [user, view, fetchExpenses, fetchBudgets, searchQuery]);
+
+  // Also fetch budgets when switching to budget tab (in case data changed)
+  useEffect(() => {
+    if (user && view === 'budget') {
+      fetchBudgets();
+    }
+  }, [user, view, fetchBudgets]);
+
+  // ── Auth handlers ───────────────────────────────────────────────────────────
 
   const handleAuthSuccess = (loggedInUser) => {
     setUser(loggedInUser);
+    showToast(`Welcome back, ${loggedInUser.name}!`, 'success');
   };
 
   const handleLogout = () => {
     logout();
-    // Reset all state to initial values on logout
     setUser(null);
     setExpenses([]);
+    setBudgets([]);
     setShowForm(false);
     setEditingExpense(null);
     setView('expenses');
@@ -84,10 +136,12 @@ const App = () => {
     setError('');
   };
 
+  // ── Expense CRUD ────────────────────────────────────────────────────────────
+
   /**
-   * Passed to ExpenseList → SearchBar. The debounce lives inside SearchBar,
-   * so this handler is called at most once per 300ms burst of keystrokes.
-   * useCallback prevents SearchBar from re-rendering on every parent re-render.
+   * handleSearch is passed to ExpenseList → SearchBar.
+   * The 300ms debounce lives inside SearchBar; this is called at most once
+   * per debounce burst.
    */
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
@@ -97,9 +151,10 @@ const App = () => {
     try {
       setError('');
       const newExpense = await createExpense(formData);
-      // Prepend to list so the newest expense appears at the top immediately
       setExpenses(prev => [newExpense, ...prev]);
       setShowForm(false);
+      showToast('Expense added!', 'success');
+      fetchBudgets(); // Refresh actualSpent values in budget list
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add expense. Please try again.');
     }
@@ -109,10 +164,11 @@ const App = () => {
     try {
       setError('');
       const updated = await updateExpense(editingExpense._id, formData);
-      // Replace the old version in the list with the updated document
       setExpenses(prev => prev.map(e => e._id === editingExpense._id ? updated : e));
       setEditingExpense(null);
       setShowForm(false);
+      showToast('Expense updated!', 'success');
+      fetchBudgets();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update expense. Please try again.');
     }
@@ -123,6 +179,8 @@ const App = () => {
       setError('');
       await deleteExpense(id);
       setExpenses(prev => prev.filter(e => e._id !== id));
+      showToast('Expense deleted.', 'info');
+      fetchBudgets();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete expense. Please try again.');
     }
@@ -131,7 +189,6 @@ const App = () => {
   const handleSelectEdit = (expense) => {
     setEditingExpense(expense);
     setShowForm(true);
-    // Smooth scroll to the form after its enter animation begins
     setTimeout(() => {
       const formSection = document.querySelector('.form-section');
       if (formSection) {
@@ -148,10 +205,56 @@ const App = () => {
     setShowForm(false);
   };
 
-  // Show auth screen until a user session is present
+  // ── CSV Export ──────────────────────────────────────────────────────────────
+
+  /**
+   * Converts the current expense list to a CSV string and triggers a browser
+   * download.  Works entirely client-side — no API call needed because the
+   * parent already holds all the data.
+   * Using a Blob + Object URL avoids any server round-trip and works in all
+   * modern browsers without a library.
+   */
+  const handleExportCSV = () => {
+    if (expenses.length === 0) {
+      showToast('No expenses to export.', 'info');
+      return;
+    }
+
+    const headers = ['Title', 'Category', 'Amount', 'Date', 'Description'];
+    const rows = expenses.map(e => [
+      `"${e.title.replace(/"/g, '""')}"`,
+      e.category,
+      e.amount.toFixed(2),
+      new Date(e.date).toLocaleDateString('en-CA'),   // YYYY-MM-DD
+      `"${(e.description || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+
+    const link    = document.createElement('a');
+    link.href     = url;
+    link.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${expenses.length} expense${expenses.length !== 1 ? 's' : ''}.`, 'success');
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   if (!user) {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
+
+  const tabs = [
+    { key: 'expenses', label: '📊 My Expenses' },
+    { key: 'budget',   label: '🎯 Budgets' },
+    ...(user.role === 'admin' ? [{ key: 'admin', label: '🛡️ Admin' }] : [])
+  ];
 
   return (
     <div className="app">
@@ -162,25 +265,16 @@ const App = () => {
         </div>
 
         <nav className="header-nav" aria-label="Main navigation">
-          {/* Admin-only tab — only rendered for admin role users */}
-          {user.role === 'admin' && (
-            <>
-              <button
-                className={`nav-btn ${view === 'expenses' ? 'active' : ''}`}
-                onClick={() => setView('expenses')}
-                aria-current={view === 'expenses' ? 'page' : undefined}
-              >
-                📊 My Expenses
-              </button>
-              <button
-                className={`nav-btn ${view === 'admin' ? 'active' : ''}`}
-                onClick={() => setView('admin')}
-                aria-current={view === 'admin' ? 'page' : undefined}
-              >
-                🛡️ Admin
-              </button>
-            </>
-          )}
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              className={`nav-btn ${view === key ? 'active' : ''}`}
+              onClick={() => setView(key)}
+              aria-current={view === key ? 'page' : undefined}
+            >
+              {label}
+            </button>
+          ))}
 
           <div className="user-info">
             <span className="user-greeting">
@@ -195,7 +289,6 @@ const App = () => {
       </header>
 
       <main className="app-main">
-        {/* Global error banner — dismissible */}
         {error && (
           <div className="error-banner" role="alert">
             <span>{error}</span>
@@ -206,10 +299,30 @@ const App = () => {
         )}
 
         <div className="container">
-          {view === 'admin' && user.role === 'admin' ? (
-            <AdminPanel currentUser={user} />
-          ) : (
+          {/* ── Admin tab ── */}
+          {view === 'admin' && user.role === 'admin' && (
+            <AdminPanel currentUser={user} showToast={showToast} />
+          )}
+
+          {/* ── Budget tab ── */}
+          {view === 'budget' && (
+            <BudgetManager
+              month={currentMonth}
+              year={currentYear}
+              onUpdate={fetchBudgets}
+              showToast={showToast}
+            />
+          )}
+
+          {/* ── Expenses tab ── */}
+          {view === 'expenses' && (
             <>
+              {/* Spending overview widget — only shown when there is data */}
+              {expenses.length > 0 && (
+                <SpendingSummary expenses={expenses} budgets={budgets} />
+              )}
+
+              {/* Add / Edit form */}
               {showForm ? (
                 <div className="form-section">
                   <ExpenseForm
@@ -219,21 +332,30 @@ const App = () => {
                   />
                 </div>
               ) : (
-                <button
-                  className="btn-add-expense"
-                  onClick={() => { setShowForm(true); setEditingExpense(null); }}
-                >
-                  + Add New Expense
-                </button>
+                <div className="expense-actions-bar">
+                  <button
+                    className="btn-add-expense"
+                    onClick={() => { setShowForm(true); setEditingExpense(null); }}
+                  >
+                    + Add New Expense
+                  </button>
+                  {expenses.length > 0 && (
+                    <button className="btn-export-csv" onClick={handleExportCSV} title="Download as CSV">
+                      ⬇ Export CSV
+                    </button>
+                  )}
+                </div>
               )}
 
               <div className="list-section">
                 <ExpenseList
                   expenses={expenses}
+                  budgets={budgets}
                   onEdit={handleSelectEdit}
                   onDelete={handleDeleteExpense}
                   loading={loading}
                   onSearch={handleSearch}
+                  showToast={showToast}
                 />
               </div>
             </>
@@ -242,10 +364,18 @@ const App = () => {
       </main>
 
       <footer className="app-footer">
-        <p>Expense Tracker © 2025 | Web Development Assignment</p>
+        <p>Expense Tracker © 2025 | Aditya Ashish Satam — UTS Internet Programming Assignment 2</p>
       </footer>
     </div>
   );
 };
+
+// ── Root export wraps the inner app with ToastProvider ──────────────────────
+
+const App = () => (
+  <ToastProvider>
+    <AppInner />
+  </ToastProvider>
+);
 
 export default App;
