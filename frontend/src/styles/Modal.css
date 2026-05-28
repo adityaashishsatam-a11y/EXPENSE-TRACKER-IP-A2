@@ -1,0 +1,93 @@
+/* ── Modal Overlay ──────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;                          /* top/right/bottom/left: 0 */
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.18s ease;
+  padding: 16px;
+}
+
+/* ── Modal Card ────────────────────────────────────────────────────────────── */
+
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: modalSlideUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 10px;
+}
+
+.modal-message {
+  color: #4a5568;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 24px;
+  white-space: pre-line;            /* Respect newlines in message text */
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+/* Danger variant — used for destructive actions like Delete */
+.modal-btn-danger {
+  background: #e53e3e;
+  color: #fff;
+}
+.modal-btn-danger:hover  { background: #c53030; }
+.modal-btn-danger:active { transform: scale(0.97); }
+
+/* Info variant — used for non-destructive confirmations */
+.modal-btn-info {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+.modal-btn-info:hover  { opacity: 0.9; }
+.modal-btn-info:active { transform: scale(0.97); }
+
+.modal-btn-cancel {
+  background: #edf2f7;
+  color: #4a5568;
+}
+.modal-btn-cancel:hover  { background: #e2e8f0; }
+.modal-btn-cancel:active { transform: scale(0.97); }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}

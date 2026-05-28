@@ -1,0 +1,100 @@
+/* ── Toast Stack Container ──────────────────────────────────────────────────── */
+
+.toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;             /* Let clicks pass through the container */
+}
+
+/* ── Individual Toast ──────────────────────────────────────────────────────── */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  min-width: 260px;
+  max-width: 380px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  pointer-events: all;              /* Re-enable clicks for the toast itself */
+  animation: toastSlideIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1.4;
+}
+
+/* ── Type Variants ─────────────────────────────────────────────────────────── */
+
+.toast-success {
+  background: #276749;
+  color: #fff;
+  border-left: 4px solid #9ae6b4;
+}
+
+.toast-error {
+  background: #9b2c2c;
+  color: #fff;
+  border-left: 4px solid #fc8181;
+}
+
+.toast-info {
+  background: #2b4c7e;
+  color: #fff;
+  border-left: 4px solid #90cdf4;
+}
+
+/* ── Icon & Content ────────────────────────────────────────────────────────── */
+
+.toast-icon {
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.toast-close:hover { color: #fff; }
+
+/* ── Animation ─────────────────────────────────────────────────────────────── */
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .toast-stack {
+    top: auto;
+    bottom: 20px;
+    right: 12px;
+    left: 12px;
+  }
+  .toast {
+    min-width: unset;
+    max-width: 100%;
+  }
+}
