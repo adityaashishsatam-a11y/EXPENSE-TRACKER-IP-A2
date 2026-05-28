@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * Auth Routes — /api/auth/*
  *

@@ -1,3 +1,4 @@
+/* Author: Harshali Tambadkar (25543582) */
 /**
  * Admin Controller
  * Full administrative control over users, expenses, and activity logs.

@@ -1,3 +1,4 @@
+/* Author: Harshali Tambadkar (25543582) */
 /**
  * Toast Notification System
  * Author: Aditya Ashish Satam (25402847)

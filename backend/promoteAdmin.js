@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 const mongoose = require('mongoose');
 require('dotenv').config();
 

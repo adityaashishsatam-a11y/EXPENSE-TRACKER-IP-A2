@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * UserActivity Model — Third Entity (Assignment 2 Requirement)
  *

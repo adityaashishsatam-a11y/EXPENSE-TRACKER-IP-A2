@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * Expense Model
  * Core entity of the application. Each expense belongs to exactly one User,

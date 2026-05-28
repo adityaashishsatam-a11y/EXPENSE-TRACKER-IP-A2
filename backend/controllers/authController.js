@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * Auth Controller
  * Handles user registration, login, and fetching the current user's profile.

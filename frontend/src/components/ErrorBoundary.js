@@ -1,3 +1,4 @@
+/* Author: Harshali Tambadkar (25543582) */
 import React from 'react';
 import '../styles/ErrorBoundary.css';
 

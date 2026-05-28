@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * seed.js — Database Seed Script
  * Author: Aditya Ashish Satam (25402847)

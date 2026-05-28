@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * User Model
  * Represents a registered user of the Expense Tracker application.

@@ -1,3 +1,4 @@
+/* Author: Aditya Ashish Satam (25402847) */
 /**
  * errorUtils.js — Shared Error Handling Utilities
  *
